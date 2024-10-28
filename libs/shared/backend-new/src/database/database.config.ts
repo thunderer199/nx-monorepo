@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { drizzle, NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { Pool } from 'pg';
-import { EnvironmentConfig } from '@microservices-app/shared/types';
+import { EnvironmentConfig } from '@microservices-app/types-new';
 
 @Injectable()
 export class DatabaseConfig {
@@ -11,7 +11,7 @@ export class DatabaseConfig {
 
   async createConnection(): Promise<NodePgDatabase> {
     const dbConfig = this.configService.get('database', { infer: true });
-    
+
     const pool = new Pool({
       connectionString: dbConfig?.url,
       min: dbConfig?.poolMin,
@@ -26,7 +26,7 @@ export class DatabaseConfig {
     // Run migrations in development/test environments
     if (process.env['NODE_ENV'] !== 'production') {
       try {
-        await migrate(db, { 
+        await migrate(db, {
           migrationsFolder: 'drizzle',
           migrationsSchema: dbConfig?.schemaName, // Specify schema for migrations table
         });

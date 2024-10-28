@@ -1,4 +1,4 @@
-import { environmentSchema } from '@microservices-app/shared/types';
+import { environmentSchema } from '@microservices-app/types-new';
 import { ConfigFactory } from '@nestjs/config';
 
 export const loadConfiguration: ConfigFactory = () => {
@@ -6,8 +6,8 @@ export const loadConfiguration: ConfigFactory = () => {
     nodeEnv: process.env['NODE_ENV'] || 'development',
     database: {
       url: process.env['DATABASE_URL'],
-      schemaName: process.env['NODE_ENV'] === 'test' 
-        ? process.env['TEST_DATABASE_SCHEMA'] 
+      schemaName: process.env['NODE_ENV'] === 'test'
+        ? process.env['TEST_DATABASE_SCHEMA']
         : process.env['DATABASE_SCHEMA'] || 'public',  // Default to 'public' schema
       poolMin: process.env['DATABASE_POOL_MIN'],
       poolMax: process.env['DATABASE_POOL_MAX'],

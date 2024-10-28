@@ -1,8 +1,8 @@
 import { Test } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
-import { DatabaseModule, loadConfiguration } from '@microservices-app/shared/backend';
 import { UserRepository } from '../user.repository';
-import { NewUser } from '@microservices-app/shared/types';
+import { loadConfiguration, DatabaseModule } from '@microservices-app/backend-new';
+import { NewUser } from '@microservices-app/types-new';
 
 describe('UserRepository', () => {
   let repository: UserRepository;

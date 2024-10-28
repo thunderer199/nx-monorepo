@@ -1,13 +1,8 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { DatabaseConfig } from '@microservices-app/shared/backend';
+import { DatabaseConfig } from '@microservices-app/backend-new';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { eq, isNull, and } from 'drizzle-orm';
-import { 
-  User, 
-  NewUser,
-  users 
-} from '@microservices-app/shared/types';
-import { NotFoundError } from '@microservices-app/shared/types';
+import { User, NewUser, users, NotFoundError } from '@microservices-app/types-new';
 
 @Injectable()
 export class UserRepository implements OnModuleInit {
@@ -28,7 +23,7 @@ export class UserRepository implements OnModuleInit {
         isNull(users.deletedAt)
       ))
       .limit(1);
-    
+
     return results[0] || null;
   }
 
@@ -41,7 +36,7 @@ export class UserRepository implements OnModuleInit {
         isNull(users.deletedAt)
       ))
       .limit(1);
-    
+
     return results[0] || null;
   }
 
@@ -61,7 +56,7 @@ export class UserRepository implements OnModuleInit {
         updatedAt: new Date(),
       } as NewUser)
       .returning();
-    
+
     return results[0];
   }
 
