@@ -1,0 +1,12 @@
+{
+  "name": "@microservices-app/shared-types",
+  "version": "0.0.1",
+  "dependencies": {
+    "drizzle-orm": "^0.35.3",
+    "zod": "^3.23.8",
+    "tslib": "^2.3.0"
+  },
+  "main": "./index.cjs",
+  "module": "./index.js",
+  "private": true
+}
