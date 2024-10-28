@@ -1,58 +1,111 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseConfig } from '@microservices-app/shared/backend';
+import { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { eq, isNull, and } from 'drizzle-orm';
 import { 
   User, 
-  NewUser, 
-  UserRepository,
+  NewUser,
   users 
 } from '@microservices-app/shared/types';
-import { BaseRepositoryImpl } from '@microservices-app/shared/backend';
-import { eq, isNull } from 'drizzle-orm';
+import { NotFoundError } from '@microservices-app/shared/types';
 
 @Injectable()
-export class UserRepositoryImpl 
-  extends BaseRepositoryImpl<User, NewUser> 
-  implements UserRepository 
-{
+export class UserRepository {
+  private db: NodePgDatabase;
+
   constructor(private readonly dbConfig: DatabaseConfig) {
-    super(dbConfig.createConnection(), users);
+    this.db = dbConfig.createConnection();
+  }
+
+  async findById(id: string): Promise<User | null> {
+    const results = await this.db
+      .select()
+      .from(users)
+      .where(and(
+        eq(users.id, id),
+        isNull(users.deletedAt)
+      ))
+      .limit(1);
+    
+    return results[0] || null;
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    const result = await this.db
+    const results = await this.db
       .select()
       .from(users)
-      .where(eq(users.email, email))
+      .where(and(
+        eq(users.email, email),
+        isNull(users.deletedAt)
+      ))
       .limit(1);
     
-    return result[0] || null;
+    return results[0] || null;
   }
 
-  async softDelete(id: string): Promise<void> {
-    await this.update(id, { deletedAt: new Date() });
-  }
-
-  async findAllActive(): Promise<User[]> {
+  async findAll(): Promise<User[]> {
     return this.db
       .select()
       .from(users)
       .where(isNull(users.deletedAt));
   }
 
-  // Override findAll to exclude soft-deleted records
-  async findAll(): Promise<User[]> {
-    return this.findAllActive();
+  async create(data: NewUser): Promise<User> {
+    const results = await this.db
+      .insert(users)
+      .values(data)
+      .returning();
+    
+    return results[0];
   }
 
-  // Override findById to exclude soft-deleted records
-  async findById(id: string): Promise<User | null> {
-    const result = await this.db
-      .select()
-      .from(users)
+  async update(id: string, data: Partial<NewUser>): Promise<User> {
+    const results = await this.db
+      .update(users)
+      .set({
+        ...data,
+        updatedAt: new Date()
+      })
+      .where(and(
+        eq(users.id, id),
+        isNull(users.deletedAt)
+      ))
+      .returning();
+
+    const result = results[0];
+    if (!result) {
+      throw new NotFoundError(`User with id ${id} not found`);
+    }
+
+    return result;
+  }
+
+  async softDelete(id: string): Promise<void> {
+    const results = await this.db
+      .update(users)
+      .set({ 
+        deletedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(and(
+        eq(users.id, id),
+        isNull(users.deletedAt)
+      ))
+      .returning();
+
+    if (!results[0]) {
+      throw new NotFoundError(`User with id ${id} not found`);
+    }
+  }
+
+  async hardDelete(id: string): Promise<void> {
+    const results = await this.db
+      .delete(users)
       .where(eq(users.id, id))
-      .where(isNull(users.deletedAt))
-      .limit(1);
-    
-    return result[0] || null;
+      .returning();
+
+    if (!results[0]) {
+      throw new NotFoundError(`User with id ${id} not found`);
+    }
   }
 }

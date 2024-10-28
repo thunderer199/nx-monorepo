@@ -1,8 +1,5 @@
 {
   "name": "@microservices-app/source",
-  "workspaces": [
-    "libs/*", "apps/*"
-  ],
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
