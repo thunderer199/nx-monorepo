@@ -15,5 +15,9 @@ export const users = pgTable('users', {
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
 });
 
+// Export the inferred types
 export type User = typeof users.$inferSelect;
-export type NewUser = typeof users.$inferInsert;
+export type NewUser = Omit<typeof users.$inferSelect, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>;
+
+// Type for updates
+export type UpdateUser = Partial<NewUser>;

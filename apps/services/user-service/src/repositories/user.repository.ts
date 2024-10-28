@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { DatabaseConfig } from '@microservices-app/shared/backend';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { eq, isNull, and } from 'drizzle-orm';
@@ -10,11 +10,13 @@ import {
 import { NotFoundError } from '@microservices-app/shared/types';
 
 @Injectable()
-export class UserRepository {
-  private db: NodePgDatabase;
+export class UserRepository implements OnModuleInit {
+  private db!: NodePgDatabase;
 
-  constructor(private readonly dbConfig: DatabaseConfig) {
-    this.db = dbConfig.createConnection();
+  constructor(private readonly dbConfig: DatabaseConfig) {}
+
+  async onModuleInit() {
+    this.db = await this.dbConfig.createConnection();
   }
 
   async findById(id: string): Promise<User | null> {
@@ -53,7 +55,11 @@ export class UserRepository {
   async create(data: NewUser): Promise<User> {
     const results = await this.db
       .insert(users)
-      .values(data)
+      .values({
+        ...data,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as NewUser)
       .returning();
     
     return results[0];
@@ -64,8 +70,8 @@ export class UserRepository {
       .update(users)
       .set({
         ...data,
-        updatedAt: new Date()
-      })
+        updatedAt: new Date(),
+      } as User)
       .where(and(
         eq(users.id, id),
         isNull(users.deletedAt)
@@ -83,10 +89,10 @@ export class UserRepository {
   async softDelete(id: string): Promise<void> {
     const results = await this.db
       .update(users)
-      .set({ 
+      .set({
+        updatedAt: new Date(),
         deletedAt: new Date(),
-        updatedAt: new Date()
-      })
+      } as Partial<User>) // Type assertion needed for system fields
       .where(and(
         eq(users.id, id),
         isNull(users.deletedAt)
